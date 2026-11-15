@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-title" content="Pocket HTML">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Pocket HTML</title>
+<style>
+:root{
+  --bg:#f4f4f6; --card:#ffffff; --ink:#15171c; --mute:#6b7080; --line:#e3e4e8;
+  --accent:#2f6bff; --accent-ink:#fff; --danger:#d93a3a; --chip:#eef1f8;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px); --safe-r:env(safe-area-inset-right,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0f1115;--card:#181b21;--ink:#eceef3;--mute:#8d93a3;--line:#262a33;--accent:#5b8cff;--chip:#20242d;--danger:#ff6262}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.wrap{max-width:720px;margin:0 auto;padding:calc(18px + var(--safe-t)) calc(16px + var(--safe-r)) calc(40px + var(--safe-b)) calc(16px + var(--safe-l))}
+header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.logo{width:40px;height:40px;border-radius:11px;background:var(--accent);color:#fff;display:grid;place-items:center;font:700 15px ui-monospace,Menlo,monospace;flex:none}
+h1{font-size:26px;margin:0;letter-spacing:-.02em}
+.sub{color:var(--mute);font-size:14px;margin:4px 0 18px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:14px;padding:0 14px;font-weight:600;background:var(--card);border:1px solid var(--line)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.small{min-height:38px;border-radius:10px;font-size:14px;padding:0 12px}
+.btn.danger{color:var(--danger)}
+.btn.danger.armed{background:var(--danger);color:#fff;border-color:transparent}
+.btn svg{width:18px;height:18px}
+.notice{font-size:13px;color:var(--mute);background:var(--chip);border-radius:12px;padding:10px 12px;margin:12px 0}
+.notice.warn{color:#9a5b00;background:#fff3dc}
+@media (prefers-color-scheme:dark){.notice.warn{color:#ffcf7a;background:#2b2210}}
+.list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.row{display:flex;align-items:center}
+.open{flex:1;display:flex;align-items:center;gap:12px;padding:12px 4px 12px 12px;text-align:left;min-width:0}
+.ficon{width:42px;height:42px;border-radius:10px;background:var(--chip);display:grid;place-items:center;font:600 13px ui-monospace,Menlo,monospace;color:var(--accent);flex:none}
+.meta{min-width:0}
+.meta b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.meta small{color:var(--mute);font-size:13px}
+.more{width:48px;height:56px;display:grid;place-items:center;color:var(--mute);flex:none}
+.details{border-top:1px solid var(--line);padding:10px 12px 12px}
+.details h4{margin:2px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+.pages{display:flex;flex-direction:column;margin-bottom:10px}
+.pages button{text-align:left;padding:9px 2px;border-bottom:1px solid var(--line);font:14px ui-monospace,Menlo,monospace;word-break:break-all}
+.pages button:last-child{border-bottom:0}
+.det-actions{display:flex;flex-wrap:wrap;gap:8px}
+.empty{text-align:center;color:var(--mute);padding:40px 10px}
+.empty .big{font-size:40px;margin-bottom:8px}
+/* viewer */
+#viewer{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:10}
+#viewer.on{display:flex}
+.vbar{display:flex;align-items:center;gap:4px;padding:calc(6px + var(--safe-t)) calc(6px + var(--safe-r)) 6px calc(6px + var(--safe-l));background:var(--card);border-bottom:1px solid var(--line)}
+.vbar .ib{width:42px;height:42px;display:grid;place-items:center;border-radius:10px;color:var(--accent)}
+.vbar .ib:active{background:var(--chip)}
+.vbar .ib svg{width:22px;height:22px}
+.vtitle{flex:1;min-width:0;text-align:center;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vtitle small{display:block;font-weight:400;color:var(--mute);font-size:11px;font-family:ui-monospace,Menlo,monospace}
+#frame{flex:1;width:100%;border:0;background:#fff}
+.vbody{flex:1;display:flex;position:relative;padding-bottom:var(--safe-b);background:#fff}
+#viewer.full .vbar{display:none}
+#exitFull{position:absolute;right:calc(10px + var(--safe-r));top:calc(10px + var(--safe-t));width:40px;height:40px;border-radius:20px;background:rgba(0,0,0,.45);color:#fff;display:none;place-items:center;z-index:2}
+#viewer.full #exitFull{display:grid}
+#exitFull svg{width:20px;height:20px}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.scrim.on{display:flex}
+.sheet{width:100%;max-width:720px;background:var(--card);border-radius:20px 20px 0 0;padding:18px calc(16px + var(--safe-r)) calc(18px + var(--safe-b)) calc(16px + var(--safe-l))}
+.sheet h3{margin:0 0 12px;font-size:18px}
+.sheet label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+.sheet input,.sheet textarea{width:100%;font:16px ui-monospace,Menlo,monospace;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.sheet textarea{height:38vh;resize:vertical;font-size:14px}
+.sheet .row2{display:flex;gap:10px;margin-top:14px}
+.sheet .row2 .btn{flex:1}
+#toast{position:fixed;left:50%;bottom:calc(24px + var(--safe-b));transform:translateX(-50%) translateY(20px);background:#1d2027;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:30;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+details.help{margin-top:22px;color:var(--mute);font-size:14px}
+details.help summary{cursor:pointer;font-weight:600;color:var(--ink)}
+details.help li{margin:6px 0}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">&lt;/&gt;</div>
+    <h1>Pocket HTML</h1>
+  </header>
+  <p class="sub">Open HTML files kept on this phone. Nothing is uploaded to a server.</p>
+
+  <div class="actions">
+    <button class="btn primary" id="addBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add files
+    </button>
+    <button class="btn" id="pasteBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9z"/></svg>Paste HTML
+    </button>
+  </div>
+  <input type="file" id="picker" multiple>
+  <div id="storeNote"></div>
+  <div class="notice">Pick an HTML file <b>together with</b> its CSS, JS and images, or pick a <b>.zip</b> of the whole folder. Links between pages in a zip work.</div>
+
+  <div class="list" id="list"></div>
+
+  <details class="help">
+    <summary>Tips and limits</summary>
+    <ul>
+      <li>In the iPhone file picker, tap <b>Select</b> to choose several files at once.</li>
+      <li>For a site with subfolders, zip the folder first (Files app: long-press the folder, then <b>Compress</b>), then add the .zip.</li>
+      <li>Use <b>⋯ → Add files</b> to add a missing image or stylesheet to an existing project.</li>
+      <li>Pages that load data with <code>fetch()</code>, use ES-module <code>import</code> between files, or load things from the internet may not fully work.</li>
+      <li>Files are stored in this browser only. Deleting browser or Claude app data removes them, so keep your originals.</li>
+    </ul>
+  </details>
+</div>
+
+<div id="viewer">
+  <div class="vbar">
+    <button class="ib" id="vBack" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="vtitle" id="vTitle">—</div>
+    <button class="ib" id="vReload" aria-label="Reload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+    <button class="ib" id="vFull" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <button class="ib" id="vClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="vbody">
+    <button id="exitFull" aria-label="Exit full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <iframe id="frame" title="Page"></iframe>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+const MIME = {html:'text/html',htm:'text/html',xhtml:'application/xhtml+xml',css:'text/css',js:'text/javascript',mjs:'text/javascript',
+  json:'application/json',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',
+  avif:'image/avif',ico:'image/x-icon',bmp:'image/bmp',mp4:'video/mp4',m4v:'video/mp4',webm:'video/webm',mov:'video/quicktime',
+  mp3:'audio/mpeg',wav:'audio/wav',ogg:'audio/ogg',m4a:'audio/mp4',aac:'audio/aac',woff:'font/woff',woff2:'font/woff2',
+  ttf:'font/ttf',otf:'font/otf',txt:'text/plain',xml:'application/xml',pdf:'application/pdf',csv:'text/csv',md:'text/plain'};
+const ext = p => (p.split('/').pop().split('.').pop() || '').toLowerCase();
+const mimeOf = p => MIME[ext(p)] || 'application/octet-stream';
+const isHTML = p => /\.(x?html?)$/i.test(p);
+const fmtSize = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+
+let toastT;
+function toast(msg, ms = 2200) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms);
+}
+
+/* ---------- storage: IndexedDB with reconnect, falling back to memory ---------- */
+const req = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const txDone = tx => new Promise((res, rej) => { tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error('Storage refused the write (full?)')); });
+const Store = {
+  db: null, mode: 'idb', onFallback: null,
+  mem: { projects: new Map(), files: new Map() },
+  open() {
+    return new Promise((res, rej) => {
+      let settled = false;
+      const r = indexedDB.open('pocket-html', 1);
+      r.onupgradeneeded = () => {
+        const d = r.result;
+        if (!d.objectStoreNames.contains('projects')) d.createObjectStore('projects', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('files')) d.createObjectStore('files', { keyPath: 'key' }).createIndex('project', 'project');
+      };
+      r.onsuccess = () => {
+        settled = true;
+        const d = r.result;
+        d.onclose = () => { if (this.db === d) this.db = null; };
+        d.onversionchange = () => { d.close(); if (this.db === d) this.db = null; };
+        res(d);
+      };
+      r.onerror = () => { settled = true; rej(r.error); };
+      setTimeout(() => { if (!settled) rej(new Error('Storage did not respond')); }, 5000);
+    });
+  },
+  drop() { try { this.db && this.db.close(); } catch (e) {} this.db = null; },
+  toMemory(err) {
+    if (this.mode === 'memory') return;
+    console.warn('Falling back to memory storage:', err);
+    this.mode = 'memory'; this.drop();
+    this.onFallback && this.onFallback(err);
+  },
+  // Run fn(db); on failure reconnect once (iOS drops IndexedDB connections when the
+  // page is backgrounded, e.g. while the file picker is open), then fall back to memory.
+  async run(fn) {
+    if (this.mode === 'memory') return fn(null);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        if (!this.db) this.db = await this.open();
+        return await fn(this.db);
+      } catch (e) {
+        this.drop();
+        if (attempt === 1) { this.toMemory(e); return fn(null); }
+      }
+    }
+  },
+  async init() {
+    if (!window.indexedDB) return this.toMemory(new Error('IndexedDB missing'));
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) this.drop(); });
+    window.addEventListener('pageshow', () => this.drop());
+    await this.run(async db => { if (db) await req(db.transaction('projects').objectStore('projects').count()); });
+    try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+  },
+  get persistent() { return this.mode === 'idb'; },
+  projects() {
+    return this.run(async db => {
+      const mine = [...this.mem.projects.values()];
+      if (!db) return mine;
+      const stored = await req(db.transaction('projects').objectStore('projects').getAll());
+      const ids = new Set(stored.map(p => p.id));
+      return stored.concat(mine.filter(p => !ids.has(p.id)));
+    });
+  },
+  files(pid) {
+    return this.run(async db => {
+      let rows = [...this.mem.files.values()].filter(f => f.project === pid);
+      if (db && !rows.length) rows = await req(db.transaction('files').objectStore('files').index('project').getAll(pid));
+      return rows.map(r => ({ path: r.path, type: r.type, size: r.size, blob: new Blob([r.data], { type: r.type }) }));
+    });
+  },
+  save(project, files) {
+    const rows = files.map(f => ({ key: project.id + '\u0000' + f.path, project: project.id, path: f.path, type: f.type, size: f.data.byteLength, data: f.data }));
+    return this.run(async db => {
+      if (!db) {
+        // memory mode: if the project lives in IndexedDB we can't see it, so keep what we have
+        this.mem.projects.set(project.id, project);
+        rows.forEach(r => this.mem.files.set(r.key, r));
+        return;
+      }
+      const tx = db.transaction(['projects', 'files'], 'readwrite');
+      tx.objectStore('projects').put(project);
+      const fs = tx.objectStore('files');
+      rows.forEach(r => fs.put(r));
+      await txDone(tx);
+    });
+  },
+  putProject(project) {
+    return this.run(async db => {
+      if (!db || this.mem.projects.has(project.id)) { this.mem.projects.set(project.id, project); if (!db) return; }
+      const tx = db.transaction('projects', 'readwrite');
+      tx.objectStore('projects').put(project);
+      await txDone(tx);
+    });
+  },
+  remove(pid) {
+    this.mem.projects.delete(pid);
+    for (const [k, f] of this.mem.files) if (f.project === pid) this.mem.files.delete(k);
+    return this.run(async db => {
+      if (!db) return;
+      const tx = db.transaction(['projects', 'files'], 'readwrite');
+      tx.objectStore('projects').delete(pid);
+      const keys = await req(tx.objectStore('files').index('project').getAllKeys(pid));
+      keys.forEach(k => tx.objectStore('files').delete(k));
+      await txDone(tx);
+    });
+  }
+};
+
+/* ---------- zip reader (stored + deflate) ---------- */
+async function readZip(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  let eocd = -1;
+  for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('Not a valid zip file');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const dec = new TextDecoder();
+  const out = [];
+  for (let n = 0; n < count; n++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true);
+    const csize = dv.getUint32(p + 20, true);
+    const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+    const loff = dv.getUint32(p + 42, true);
+    const name = dec.decode(buf.subarray(p + 46, p + 46 + nlen));
+    p += 46 + nlen + xlen + clen;
+    if (name.endsWith('/') || /(^|\/)(__MACOSX|\.DS_Store)(\/|$)/.test(name) || /(^|\/)\._/.test(name)) continue;
+    const start = loff + 30 + dv.getUint16(loff + 26, true) + dv.getUint16(loff + 28, true);
+    const raw = buf.slice(start, start + csize);
+    let data;
+    if (method === 0) data = raw.buffer;
+    else if (method === 8) {
+      if (typeof DecompressionStream === 'undefined') throw new Error('This iOS version cannot unzip. Update iOS, or add the files individually.');
+      data = await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+    } else continue;
+    out.push({ path: name, type: mimeOf(name), data });
+  }
+  // drop a single shared top-level folder
+  const tops = new Set(out.map(f => f.path.split('/')[0]));
+  if (tops.size === 1 && out.every(f => f.path.includes('/'))) {
+    const t = [...tops][0] + '/';
+    out.forEach(f => f.path = f.path.slice(t.length));
+  }
+  return out;
+}
+
+/* ---------- import ---------- */
+function pickEntry(paths) {
+  const html = paths.filter(isHTML);
+  html.sort((a, b) => {
+    const ia = /(^|\/)index\.html?$/i.test(a) ? 0 : 1, ib = /(^|\/)index\.html?$/i.test(b) ? 0 : 1;
+    return ia - ib || a.split('/').length - b.split('/').length || a.localeCompare(b);
+  });
+  return html[0] || null;
+}
+
+async function importFiles(list, targetId) {
+  const files = [...list];
+  if (!files.length) return;
+  toast('Importing…', 60000);
+  try {
+    const loose = [];
+    let made = 0, firstId = null;
+    for (const f of files) {
+      if (/\.zip$/i.test(f.name) || f.type === 'application/zip') {
+        const entries = await readZip(f);
+        if (targetId) { loose.push(...entries); continue; }
+        const proj = { id: uid(), name: f.name.replace(/\.zip$/i, ''), created: Date.now() };
+        proj.entry = pickEntry(entries.map(e => e.path));
+        proj.paths = entries.map(e => e.path);
+        proj.size = entries.reduce((s, e) => s + e.data.byteLength, 0);
+        await Store.save(proj, entries);
+        made++; firstId = firstId || proj.id;
+      } else {
+        loose.push({ path: f.name, type: f.type || mimeOf(f.name), data: await f.arrayBuffer() });
+      }
+    }
+    if (loose.length) {
+      let proj;
+      if (targetId) {
+        proj = (await Store.projects()).find(p => p.id === targetId);
+      }
+      if (!proj) {
+        const firstHtml = loose.find(l => isHTML(l.path));
+        proj = { id: uid(), name: firstHtml ? firstHtml.path.replace(/\.[^.]+$/, '') : 'Files ' + new Date().toLocaleDateString(), created: Date.now(), paths: [], size: 0 };
+      }
+      const set = new Set(proj.paths || []);
+      loose.forEach(l => set.add(l.path));
+      proj.paths = [...set];
+      proj.size = (proj.size || 0) + loose.reduce((s, l) => s + l.data.byteLength, 0);
+      proj.entry = proj.entry && set.has(proj.entry) ? proj.entry : pickEntry(proj.paths);
+      await Store.save(proj, loose);
+      made++; firstId = firstId || proj.id;
+    }
+    toast(targetId ? 'Files added' : made === 1 ? 'Added' : `Added ${made} projects`);
+    openDetails = targetId || null;
+    await renderList();
+  } catch (e) {
+    console.error(e);
+    toast('Import failed: ' + (e.message || e), 4000);
+  }
+}
+
+/* ---------- renderer: turns a stored page into one self-contained document ---------- */
+class Renderer {
+  constructor(files) {
+    this.files = new Map(files.map(f => [f.path, f]));
+    this.lower = new Map(files.map(f => [f.path.toLowerCase(), f]));
+    this.urls = new Map();
+    this.cssCache = new Map();
+  }
+  get(path) { return this.files.get(path) || this.lower.get(path.toLowerCase()); }
+  resolve(base, ref) {
+    if (!ref) return null;
+    ref = ref.trim();
+    if (/^([a-z][a-z0-9+.-]*:|\/\/|#)/i.test(ref)) return null;
+    let hash = '';
+    const h = ref.indexOf('#'); if (h >= 0) { hash = ref.slice(h + 1); ref = ref.slice(0, h); }
+    const q = ref.indexOf('?'); if (q >= 0) ref = ref.slice(0, q);
+    if (!ref) return null;
+    const parts = ref.startsWith('/') ? [] : base.split('/').slice(0, -1);
+    for (const seg of ref.split('/')) {
+      if (seg === '..') parts.pop(); else if (seg && seg !== '.') parts.push(seg);
+    }
+    let path = parts.join('/');
+    try { path = decodeURIComponent(path); } catch (e) {}
+    let f = this.get(path);
+    if (!f && ref.startsWith('/')) {               // root-relative: try matching by suffix
+      for (const k of this.files.keys()) if (k.endsWith('/' + path) || k === path) { f = this.files.get(k); break; }
+    }
+    if (!f && !/\.[a-z0-9]+$/i.test(path)) f = this.get((path ? path + '/' : '') + 'index.html');
+    return f ? { file: f, hash } : null;
+  }
+  async url(f) {
+    if (this.urls.has(f.path)) return this.urls.get(f.path);
+    let u;
+    if (/^font\//.test(f.type) || /\.(woff2?|ttf|otf)$/i.test(f.path)) {
+      u = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f.blob); });
+    } else if (f.type === 'text/css') {
+      const css = await this.css(f, 0);
+      u = 'data:text/css;charset=utf-8,' + encodeURIComponent(css);
+    } else {
+      u = URL.createObjectURL(f.blob);
+    }
+    this.urls.set(f.path, u);
+    return u;
+  }
+  async replaceAsync(str, re, fn) {
+    const jobs = []; str.replace(re, (...a) => { jobs.push(fn(...a)); return ''; });
+    const res = await Promise.all(jobs); let i = 0;
+    return str.replace(re, () => res[i++]);
+  }
+  async cssText(text, base, depth) {
+    text = await this.replaceAsync(text, /@import\s+(?:url\(\s*)?(['"]?)([^'")\s;]+)\1\s*\)?([^;]*);/gi, async (m, q, ref, media) => {
+      const r = this.resolve(base, ref);
+      if (!r || depth > 5) return m;
+      const inner = await this.css(r.file, depth + 1);
+      return media.trim() ? `@media ${media.trim()}{${inner}}` : inner;
+    });
+    return this.replaceAsync(text, /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, async (m, q, ref) => {
+      const r = this.resolve(base, ref);
+      return r ? `url("${await this.url(r.file)}")` : m;
+    });
+  }
+  async css(f, depth) {
+    if (this.cssCache.has(f.path)) return this.cssCache.get(f.path);
+    const t = await this.cssText(await f.blob.text(), f.path, depth);
+    this.cssCache.set(f.path, t);
+    return t;
+  }
+  async html(f, depth = 0) {
+    const text = await f.blob.text();
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+    const base = f.path;
+    doc.querySelectorAll('base').forEach(b => b.remove());
+
+    for (const el of doc.querySelectorAll('link[href]')) {
+      const r = this.resolve(base, el.getAttribute('href'));
+      if (!r) continue;
+      const rel = (el.getAttribute('rel') || '').toLowerCase();
+      if (/\bstylesheet\b/.test(rel)) {
+        const st = doc.createElement('style');
+        if (el.media) st.media = el.media;
+        st.textContent = await this.css(r.file, 0);
+        el.replaceWith(st);
+      } else if (/\b(modulepreload|preload|prefetch)\b/.test(rel)) {
+        el.remove();
+      } else {
+        el.setAttribute('href', await this.url(r.file));
+      }
+    }
+    for (const el of doc.querySelectorAll('script[src]')) {
+      const r = this.resolve(base, el.getAttribute('src'));
+      if (!r) continue;
+      el.removeAttribute('src');
+      el.textContent = (await r.file.blob.text()).replace(/<\/script/gi, '<\\/script');
+    }
+    for (const el of doc.querySelectorAll('style')) el.textContent = await this.cssText(el.textContent, base, 0);
+    for (const el of doc.querySelectorAll('[style]')) el.setAttribute('style', await this.cssText(el.getAttribute('style'), base, 0));
+    for (const el of doc.querySelectorAll('img[src],source[src],video[src],audio[src],track[src],embed[src],input[src]')) {
+      const r = this.resolve(base, el.getAttribute('src'));
+      if (r) el.setAttribute('src', await this.url(r.file));
+    }
+    for (const el of doc.querySelectorAll('[poster]')) {
+      const r = this.resolve(base, el.getAttribute('poster'));
+      if (r) el.setAttribute('poster', await this.url(r.file));
+    }
+    for (const el of doc.querySelectorAll('[srcset]')) {
+      const parts = await Promise.all(el.getAttribute('srcset').split(',').map(async s => {
+        const [u, ...d] = s.trim().split(/\s+/);
+        const r = this.resolve(base, u);
+        return [r ? await this.url(r.file) : u, ...d].join(' ');
+      }));
+      el.setAttribute('srcset', parts.join(', '));
+    }
+    for (const el of doc.querySelectorAll('image, use, feImage')) {
+      for (const a of ['href', 'xlink:href']) {
+        const v = el.getAttribute(a); if (!v) continue;
+        const r = this.resolve(base, v);
+        if (r) el.setAttribute(a, await this.url(r.file) + (r.hash ? '#' + r.hash : ''));
+      }
+    }
+    for (const el of doc.querySelectorAll('iframe[src]')) {
+      const r = this.resolve(base, el.getAttribute('src'));
+      if (!r) continue;
+      el.removeAttribute('src');
+      if (isHTML(r.file.path) && depth < 3) el.setAttribute('srcdoc', await this.html(r.file, depth + 1));
+      else el.setAttribute('src', await this.url(r.file));
+    }
+    for (const el of doc.querySelectorAll('a[href], area[href]')) {
+      const href = el.getAttribute('href');
+      if (/^https?:/i.test(href)) { el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener'); continue; }
+      const r = this.resolve(base, href);
+      if (!r) continue;
+      if (isHTML(r.file.path)) {
+        el.setAttribute('data-lv-href', r.file.path);
+        if (r.hash) el.setAttribute('data-lv-hash', r.hash);
+        el.setAttribute('href', '#' + (r.hash || ''));
+      } else {
+        el.setAttribute('href', await this.url(r.file));
+        el.setAttribute('target', '_blank');
+      }
+    }
+    if (!doc.querySelector('meta[name=viewport]')) {
+      const m = doc.createElement('meta'); m.name = 'viewport'; m.content = 'width=device-width, initial-scale=1';
+      doc.head.prepend(m);
+    }
+    if (!doc.querySelector('meta[charset]')) { const m = doc.createElement('meta'); m.setAttribute('charset', 'utf-8'); doc.head.prepend(m); }
+    const dt = doc.doctype ? '<!DOCTYPE ' + doc.doctype.name + '>\n' : '<!DOCTYPE html>\n';
+    return dt + doc.documentElement.outerHTML;
+  }
+  dispose() { for (const u of this.urls.values()) if (u.startsWith('blob:')) URL.revokeObjectURL(u); this.urls.clear(); }
+}
+
+/* ---------- viewer ---------- */
+const V = { project: null, renderer: null, stack: [] };
+const frame = $('#frame');
+
+async function openProject(pid, path) {
+  try { await openProjectInner(pid, path); }
+  catch (e) { console.error(e); toast('Could not open: ' + (e.message || e), 4000); }
+}
+async function openProjectInner(pid, path) {
+  const proj = (await Store.projects()).find(p => p.id === pid);
+  if (!proj) return;
+  const files = await Store.files(pid);
+  if (!files.length) return toast('This project has no files');
+  const target = path || proj.entry || pickEntry(files.map(f => f.path));
+  if (!target) return toast('No HTML page in this project');
+  if (V.renderer) V.renderer.dispose();
+  V.project = proj; V.renderer = new Renderer(files); V.stack = [];
+  $('#viewer').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  await showPage(target, '', true);
+}
+
+async function showPage(path, hash, push) {
+  const f = V.renderer.get(path);
+  if (!f) return toast('Page not found: ' + path);
+  $('#vTitle').innerHTML = esc(V.project.name) + '<small>' + esc(path) + '</small>';
+  try {
+    const html = await V.renderer.html(f);
+    if (push) V.stack.push({ path, hash });
+    frame.onload = () => onFrameLoad(path, hash);
+    frame.srcdoc = html;
+  } catch (e) {
+    console.error(e);
+    toast('Could not open: ' + (e.message || e), 4000);
+  }
+}
+
+function onFrameLoad(path, hash) {
+  let d;
+  try { d = frame.contentDocument; } catch (e) { return; }
+  if (!d) return;
+  const t = d.title && d.title.trim();
+  $('#vTitle').innerHTML = esc(t || V.project.name) + '<small>' + esc(path) + '</small>';
+  d.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('a[data-lv-href]');
+    if (!a) return;
+    e.preventDefault();
+    const p = a.getAttribute('data-lv-href'), h = a.getAttribute('data-lv-hash') || '';
+    if (p === path) { if (h) scrollTo(d, h); return; }
+    showPage(p, h, true);
+  }, true);
+  if (hash) setTimeout(() => scrollTo(d, hash), 50);
+}
+function scrollTo(d, h) {
+  const el = d.getElementById(h) || d.getElementsByName(h)[0];
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+function closeViewer() {
+  $('#viewer').classList.remove('on', 'full');
+  document.body.style.overflow = '';
+  frame.onload = null;
+  frame.srcdoc = '<!DOCTYPE html><html><body></body></html>';
+  if (V.renderer) V.renderer.dispose();
+  V.renderer = null; V.project = null; V.stack = [];
+}
+$('#vBack').onclick = () => {
+  if (V.stack.length > 1) { V.stack.pop(); const top = V.stack[V.stack.length - 1]; showPage(top.path, top.hash, false); }
+  else closeViewer();
+};
+$('#vClose').onclick = closeViewer;
+$('#vReload').onclick = () => { const top = V.stack[V.stack.length - 1]; if (top) showPage(top.path, top.hash, false); };
+$('#vFull').onclick = () => $('#viewer').classList.add('full');
+$('#exitFull').onclick = () => $('#viewer').classList.remove('full');
+
+/* ---------- sheet dialogs ---------- */
+function sheet(html, onMount) {
+  $('#sheet').innerHTML = html;
+  $('#scrim').classList.add('on');
+  onMount && onMount($('#sheet'));
+}
+function closeSheet() { $('#scrim').classList.remove('on'); $('#sheet').innerHTML = ''; }
+$('#scrim').addEventListener('click', e => { if (e.target.id === 'scrim') closeSheet(); });
+
+$('#pasteBtn').onclick = () => sheet(`
+  <h3>Paste HTML</h3>
+  <label for="pName">Name</label>
+  <input id="pName" placeholder="My page" autocomplete="off">
+  <label for="pCode">HTML</label>
+  <textarea id="pCode" placeholder="<!DOCTYPE html>…" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+  <div class="row2"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save &amp; open</button></div>`,
+  s => {
+    s.querySelector('[data-x]').onclick = closeSheet;
+    s.querySelector('[data-ok]').onclick = async () => {
+      const code = s.querySelector('#pCode').value;
+      if (!code.trim()) return toast('Paste some HTML first');
+      const name = s.querySelector('#pName').value.trim() || 'Pasted page';
+      const data = new TextEncoder().encode(code).buffer;
+      const proj = { id: uid(), name, created: Date.now(), entry: 'index.html', paths: ['index.html'], size: data.byteLength };
+      try {
+        await Store.save(proj, [{ path: 'index.html', type: 'text/html', data }]);
+        closeSheet(); await renderList(); openProject(proj.id);
+      } catch (e) { toast('Could not save: ' + e.message, 4000); }
+    };
+  });
+
+function renameSheet(p) {
+  sheet(`<h3>Rename</h3><input id="rName" value="${esc(p.name)}" autocomplete="off">
+    <div class="row2"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Save</button></div>`,
+  s => {
+    const inp = s.querySelector('#rName'); setTimeout(() => inp.focus(), 50);
+    s.querySelector('[data-x]').onclick = closeSheet;
+    s.querySelector('[data-ok]').onclick = async () => {
+      p.name = inp.value.trim() || p.name;
+      await Store.putProject(p); closeSheet(); renderList();
+    };
+  });
+}
+
+/* ---------- list ---------- */
+let openDetails = null, addTarget = null;
+const picker = $('#picker');
+$('#addBtn').onclick = () => { addTarget = null; picker.value = ''; picker.click(); };
+picker.onchange = () => { const t = addTarget; addTarget = null; importFiles(picker.files, t); };
+
+async function renderList() {
+  const list = $('#list');
+  let projects = [];
+  try { projects = await Store.projects(); } catch (e) { console.error(e); }
+  projects.sort((a, b) => b.created - a.created);
+  if (!projects.length) {
+    list.innerHTML = `<div class="empty"><div class="big">📄</div>No files yet.<br>Tap <b>Add files</b> to choose HTML files or a .zip from the Files app.</div>`;
+    return;
+  }
+  list.innerHTML = projects.map(p => {
+    const paths = p.paths || [];
+    const pages = paths.filter(isHTML).sort();
+    const open = openDetails === p.id;
+    return `<div class="card" data-id="${esc(p.id)}">
+      <div class="row">
+        <button class="open" data-open>
+          <div class="ficon">${pages.length > 1 ? pages.length : '&lt;/&gt;'}</div>
+          <div class="meta"><b>${esc(p.name)}</b>
+            <small>${pages.length} page${pages.length === 1 ? '' : 's'} · ${paths.length} file${paths.length === 1 ? '' : 's'} · ${fmtSize(p.size || 0)} · ${new Date(p.created).toLocaleDateString()}</small></div>
+        </button>
+        <button class="more" data-more aria-label="More">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+      </div>
+      ${open ? `<div class="details">
+        ${pages.length ? `<h4>Pages</h4><div class="pages">${pages.map(pg => `<button data-page="${esc(pg)}">${esc(pg)}${pg === p.entry ? ' ★' : ''}</button>`).join('')}</div>` : '<p class="notice">No HTML page yet: add one.</p>'}
+        <div class="det-actions">
+          <button class="btn small" data-add>Add files</button>
+          <button class="btn small" data-rename>Rename</button>
+          <button class="btn small danger" data-del>Delete</button>
+        </div></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+$('#list').addEventListener('click', async e => {
+  const card = e.target.closest('.card'); if (!card) return;
+  const id = card.dataset.id;
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.hasAttribute('data-open')) return openProject(id);
+  if (b.hasAttribute('data-more')) { openDetails = openDetails === id ? null : id; return renderList(); }
+  if (b.dataset.page) return openProject(id, b.dataset.page);
+  if (b.hasAttribute('data-add')) { addTarget = id; picker.value = ''; return picker.click(); }
+  if (b.hasAttribute('data-rename')) { const p = (await Store.projects()).find(x => x.id === id); return p && renameSheet(p); }
+  if (b.hasAttribute('data-del')) {
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); b.textContent = 'Tap again to delete';
+      setTimeout(() => { if (b.isConnected) { b.classList.remove('armed'); b.textContent = 'Delete'; } }, 3000);
+      return;
+    }
+    await Store.remove(id); openDetails = null; toast('Deleted'); renderList();
+  }
+});
+
+/* drag & drop for desktop/iPad */
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer && e.dataTransfer.files.length) importFiles(e.dataTransfer.files); });
+
+function showStoreNote() {
+  $('#storeNote').innerHTML = '<div class="notice warn">Storage isn\'t available here, so files are kept only until you close this page. Add them again next time.</div>';
+}
+Store.onFallback = () => { showStoreNote(); };
+(async () => {
+  try { await Store.init(); } catch (e) { Store.toMemory(e); }
+  if (!Store.persistent) showStoreNote();
+  renderList();
+  try { if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+})();
+})();
+</script>
+</body>
+</html>
